@@ -1,0 +1,41 @@
+{
+    "name": "osoobe/laravel-crm",
+    "description": "A description for crm.",
+    "type": "package",
+    "license": "MIT",
+    "keywords": [
+        "laravel"
+    ],
+    "authors": [
+        {
+            "name": "Oshane Bailey",
+            "email": "oshane@osoobe.com"
+        }
+    ],
+    "require": {
+        "illuminate/support": "^7.0|^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Osoobe\\CRM\\": "./src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Osoobe\\CRM\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Osoobe\\CRM\\CRMServiceProvider"
+            ]
+        }
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.0"
+    }
+}
