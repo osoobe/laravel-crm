@@ -8,361 +8,146 @@ use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
 use PowerComponents\LivewirePowerGrid\Button;
 use PowerComponents\LivewirePowerGrid\Column;
-use PowerComponents\LivewirePowerGrid\PowerGrid;
-use PowerComponents\LivewirePowerGrid\PowerGridEloquent;
+use PowerComponents\LivewirePowerGrid\Components\SetUp\Exportable;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
-use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\Rules\Rule;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
+use PowerComponents\LivewirePowerGrid\Facades\Filter;
+use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use PowerComponents\LivewirePowerGrid\Traits\WithExport;
 
 class LeadTable extends PowerGridComponent
 {
-    use ActionButton;
+    public string $name = 'Leads';
+    public string $tableName = 'Leads';
+    public bool $showExporting = true;
+    public bool $hasLazyEnabled = false;
 
-    //Messages informing success/error data is updated.
-    public bool $showUpdateMessages = true;
-
-    /*
-    |--------------------------------------------------------------------------
-    |  Features Setup
-    |--------------------------------------------------------------------------
-    | Setup Table's general features
-    |
-    */
-    public function setUp(): void
+    public function setUp(): array
     {
-        $this->showCheckBox()
-            ->showPerPage()
-            ->showRecordCount()
-            ->showSearchInput()
-            ->showToggleColumns()
-            ->showExportOption('download', ['excel', 'csv']);
+        $this->showCheckBox();
+
+        return [
+            PowerGrid::header()
+                ->showSearchInput()
+                ->showToggleColumns(),
+            PowerGrid::exportable($this->tableName)
+                ->stripTags(true)
+                ->striped()
+                ->type(Exportable::TYPE_XLS, Exportable::TYPE_CSV),
+            PowerGrid::footer()
+                ->showPerPage(perPage: 10, perPageValues: [10, 25, 50, 100])
+                ->showRecordCount()
+        ];
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    |  Datasource
-    |--------------------------------------------------------------------------
-    | Provides data to your Table using a Model or Collection
-    |
-    */
-
-    /**
-    * PowerGrid datasource.
-    *
-    * @return  \Illuminate\Database\Eloquent\Builder<\Osoobe\CRM\Models\Lead>|null
-    */
-    public function datasource(): ?Builder
+    public function datasource(): Builder
     {
         return Lead::query();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    |  Relationship Search
-    |--------------------------------------------------------------------------
-    | Configure here relationships to be used by the Search and Table Filters.
-    |
-    */
-
-    /**
-     * Relationship search.
-     *
-     * @return array<string, array<int, string>>
-     */
     public function relationSearch(): array
     {
         return [];
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    |  Add Column
-    |--------------------------------------------------------------------------
-    | Make Datasource fields available to be used as columns.
-    | You can pass a closure to transform/modify the data.
-    |
-    */
-    public function addColumns(): ?PowerGridEloquent
+    public function fields(): PowerGridFields
     {
-        return PowerGrid::eloquent()
-            ->addColumn('id')
-            ->addColumn('name')
-            ->addColumn('category')
-            ->addColumn('lead_type')
-            ->addColumn('email')
-            ->addColumn('phone_number')
-            ->addColumn('website')
-            ->addColumn('gender')
-            ->addColumn('country')
-            ->addColumn('zip_code')
-            ->addColumn('state')
-            ->addColumn('city')
-            ->addColumn('street_address')
-            ->addColumn('status')
-            ->addColumn('source')
-            ->addColumn('created_at_formatted', function(Lead $model) {
+        return PowerGrid::fields()
+            ->add('created_at_formatted', function(Lead $model) {
                 return Carbon::parse($model->created_at)->format('d/m/Y H:i:s');
             })
-            ->addColumn('updated_at_formatted', function(Lead $model) {
+            ->add('updated_at_formatted', function(Lead $model) {
                 return Carbon::parse($model->updated_at)->format('d/m/Y H:i:s');
             });
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    |  Include Columns
-    |--------------------------------------------------------------------------
-    | Include the columns added columns, making them visible on the Table.
-    | Each column can be configured with properties, filters, actions...
-    |
-    */
-
-     /**
-     * PowerGrid Columns.
-     *
-     * @return array<int, Column>
-     */
     public function columns(): array
     {
         return [
-            Column::add()
-                ->title('ID')
-                ->field('id')
-                ->hidden(true, false)
-                ->makeInputRange(),
-
-            Column::add()
-                ->title('NAME')
-                ->field('name')
+            Column::make('Id', 'id', 'id')
                 ->sortable()
                 ->searchable()
-                ->makeInputText(),
-
-            Column::add()
-                ->title('CATEGORY')
-                ->field('category')
+                ->hidden(true, false),
+            Column::make('Name', 'name', 'name')
+                ->sortable()
+                ->searchable(),
+            Column::make('Category', 'category', 'category')
+                ->sortable()
+                ->searchable(),
+            Column::make('Lead Type', 'lead_type', 'lead_type')
+                ->sortable()
+                ->searchable(),
+            Column::make('Email', 'email', 'email')
                 ->sortable()
                 ->searchable()
-                ->makeInputText(),
-
-            Column::add()
-                ->title('LEAD TYPE')
-                ->field('lead_type')
+                ->hidden(true, false),
+            Column::make('Phone Number', 'phone_number', 'phone_number')
+                ->sortable()
+                ->searchable(),
+            Column::make('Website', 'website', 'website')
                 ->sortable()
                 ->searchable()
-                ->makeInputText(),
-
-            Column::add()
-                ->title('EMAIL')
-                ->field('email')
+                ->hidden(true, false),
+            Column::make('Gender', 'gender', 'gender')
                 ->sortable()
                 ->searchable()
-                ->hidden(true, false)
-                ->makeInputText(),
-
-            Column::add()
-                ->title('PHONE NUMBER')
-                ->field('phone_number')
+                ->hidden(true, false),
+            Column::make('Country', 'country', 'country')
                 ->sortable()
                 ->searchable()
-                ->makeInputText(),
-
-            Column::add()
-                ->title('WEBSITE')
-                ->field('website')
+                ->hidden(true, false),
+            Column::make('Zip Code', 'zip_code', 'zip_code')
                 ->sortable()
                 ->searchable()
-                ->hidden(true, false)
-                ->makeInputText(),
-
-            Column::add()
-                ->title('GENDER')
-                ->field('gender')
+                ->hidden(true, false),
+            Column::make('State', 'state', 'state')
                 ->sortable()
                 ->searchable()
-                ->hidden(true, false)
-                ->makeInputText(),
-
-            Column::add()
-                ->title('COUNTRY')
-                ->field('country')
+                ->hidden(true, false),
+            Column::make('City', 'city', 'city')
                 ->sortable()
                 ->searchable()
-                ->hidden(true, false)
-                ->makeInputText(),
-
-            Column::add()
-                ->title('ZIP CODE')
-                ->field('zip_code')
+                ->hidden(true, false),
+            Column::make('Street Address', 'street_address', 'street_address')
                 ->sortable()
                 ->searchable()
-                ->hidden(true, false)
-                ->makeInputText(),
-
-            Column::add()
-                ->title('STATE')
-                ->field('state')
+                ->hidden(true, false),
+            Column::make('Status', 'status', 'status')
+                ->sortable()
+                ->searchable(),
+            Column::make('Source', 'source', 'source')
                 ->sortable()
                 ->searchable()
-                ->hidden(true, false)
-                ->makeInputText(),
-
-            Column::add()
-                ->title('CITY')
-                ->field('city')
+                ->hidden(true, false),
+            Column::make('Created At', 'created_at_formatted', 'created_at')
                 ->sortable()
-                ->searchable()
-                ->hidden(true, false)
-                ->makeInputText(),
-
-            Column::add()
-                ->title('STREET ADDRESS')
-                ->field('street_address')
+                ->searchable(),
+            Column::make('Updated At', 'updated_at_formatted', 'updated_at')
                 ->sortable()
-                ->searchable()
-                ->hidden(true, false)
-                ->makeInputText(),
-
-
-            Column::add()
-                ->title('STATUS')
-                ->field('status')
-                ->sortable()
-                ->searchable()
-                ->makeInputText(),
-
-            Column::add()
-                ->title('SOURCE')
-                ->field('source')
-                ->sortable()
-                ->searchable()
-                ->hidden(true, false)
-                ->makeInputText(),
-
-
-            Column::add()
-                ->title('CREATED AT')
-                ->field('created_at_formatted', 'created_at')
-                ->searchable()
-                ->sortable()
-                ->makeInputDatePicker('created_at'),
-
-            Column::add()
-                ->title('UPDATED AT')
-                ->field('updated_at_formatted', 'updated_at')
-                ->searchable()
-                ->sortable()
-                ->hidden(true, false)
-                ->makeInputDatePicker('updated_at'),
-
-        ]
-;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Actions Method
-    |--------------------------------------------------------------------------
-    | Enable the method below only if the Routes below are defined in your app.
-    |
-    */
-
-     /**
-     * PowerGrid Lead Action Buttons.
-     *
-     * @return array<int, \PowerComponents\LivewirePowerGrid\Button>
-     */
-
-    /*
-    public function actions(): array
-    {
-       return [
-           Button::add('edit')
-               ->caption('Edit')
-               ->class('bg-indigo-500 cursor-pointer text-white px-3 py-2.5 m-1 rounded text-sm')
-               ->route('lead.edit', ['lead' => 'id']),
-
-           Button::add('destroy')
-               ->caption('Delete')
-               ->class('bg-red-500 cursor-pointer text-white px-3 py-2 m-1 rounded text-sm')
-               ->route('lead.destroy', ['lead' => 'id'])
-               ->method('delete')
+                ->searchable(),
         ];
     }
-    */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Actions Rules
-    |--------------------------------------------------------------------------
-    | Enable the method below to configure Rules for your Table and Action Buttons.
-    |
-    */
-
-     /**
-     * PowerGrid Lead Action Rules.
-     *
-     * @return array<int, \PowerComponents\LivewirePowerGrid\Rules\RuleActions>
-     */
-
-    /*
-    public function actionRules(): array
+    public function filters(): array
     {
-       return [
-
-           //Hide button edit for ID 1
-            Rule::button('edit')
-                ->when(fn($lead) => $lead->id === 1)
-                ->hide(),
+        return [
+            Filter::number('id', 'id'),
+            Filter::inputText('name', 'name'),
+            Filter::inputText('category', 'category'),
+            Filter::inputText('lead_type', 'lead_type'),
+            Filter::inputText('email', 'email'),
+            Filter::inputText('phone_number', 'phone_number'),
+            Filter::inputText('website', 'website'),
+            Filter::inputText('gender', 'gender'),
+            Filter::inputText('country', 'country'),
+            Filter::inputText('zip_code', 'zip_code'),
+            Filter::inputText('state', 'state'),
+            Filter::inputText('city', 'city'),
+            Filter::inputText('street_address', 'street_address'),
+            Filter::inputText('status', 'status'),
+            Filter::inputText('source', 'source'),
+            Filter::inputText('created_at_formatted', 'created_at'),
+            Filter::inputText('updated_at_formatted', 'updated_at'),
         ];
     }
-    */
-
-    /*
-    |--------------------------------------------------------------------------
-    | Edit Method
-    |--------------------------------------------------------------------------
-    | Enable the method below to use editOnClick() or toggleable() methods.
-    | Data must be validated and treated (see "Update Data" in PowerGrid doc).
-    |
-    */
-
-     /**
-     * PowerGrid Lead Update.
-     *
-     * @param array<string,string> $data
-     */
-
-    /*
-    public function update(array $data ): bool
-    {
-       try {
-           $updated = Lead::query()->findOrFail($data['id'])
-                ->update([
-                    $data['field'] => $data['value'],
-                ]);
-       } catch (QueryException $exception) {
-           $updated = false;
-       }
-       return $updated;
-    }
-
-    public function updateMessages(string $status = 'error', string $field = '_default_message'): string
-    {
-        $updateMessages = [
-            'success'   => [
-                '_default_message' => __('Data has been updated successfully!'),
-                //'custom_field'   => __('Custom Field updated successfully!'),
-            ],
-            'error' => [
-                '_default_message' => __('Error updating the data.'),
-                //'custom_field'   => __('Error updating custom field.'),
-            ]
-        ];
-
-        $message = ($updateMessages[$status][$field] ?? $updateMessages[$status]['_default_message']);
-
-        return (is_string($message)) ? $message : 'Error!';
-    }
-    */
 }
